@@ -1,18 +1,22 @@
+<!doctype html>
 <html lang="en">
 <head>
+  <meta charset="utf-8"/>
+  <meta name="theme-color" content="#F0F4FF">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ReSplit</title>
-</head>
-<body>
-<h1>ReSplit</h1>
-
-<form method="post" enctype="multipart/form-data" action="receipt">
-  <div>
-    <label for="file">Pick an image</label>
-    <input type="file" id="file" name="file" accept="image/*, application/pdf"/>
-  </div>
-  <div>
-    <button>Submit</button>
-  </div>
+  <link rel="shortcut icon" href="images/logo_32x32_roundbg.png" type="image/png"/>
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/logo_180x180.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/logo_16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/logo_32x32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="images/logo_512x512.png">
+  <link rel="stylesheet" href="resplit.css"/>
+<body class="no-margin">
+<form method="post" enctype="multipart/form-data" action="receipt" class="upload-form">
+  <label id="label" for="file" class="button button-neutral">Pick a receipt</label>
+  <input type="file" id="file" name="file" accept="image/*, application/pdf"
+         onchange="form.submit(); this.disabled = true; document.getElementById(&quot;label&quot;).innerHTML = &quot;Loading...&quot;;"/>
 </form>
 </body>
 </html>

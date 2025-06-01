@@ -23,8 +23,11 @@ kotlin {
         implementation(compose.html.core)
         implementation(compose.runtime)
 
+        // Coroutines
+        implementation(KotlinX.coroutines.core)
+
         // BigNum
-        implementation("com.ionspin.kotlin:bignum:0.3.10")
+        implementation("com.ionspin.kotlin:bignum:_")
 
         // Receipt
         implementation(project(":receipt"))

@@ -49,6 +49,7 @@ class Main {
         is Server.ReceiptSource.Url -> receiptExtractor.extractFromImageUrl(receiptSource.url)
         is Server.ReceiptSource.File -> receiptExtractor.extractFromPdfFile(receiptSource.file)
       }
+//      receiptExtractor.extractFakeValues()
     }.start()
   }
 }

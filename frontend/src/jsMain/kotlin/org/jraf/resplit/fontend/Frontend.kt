@@ -30,15 +30,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.browser.window
-import org.jetbrains.compose.web.dom.A
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.await
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
+import org.jetbrains.compose.web.dom.H2
 import org.jetbrains.compose.web.dom.Li
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.Ul
 import org.jetbrains.compose.web.renderComposable
 import org.jraf.resplit.fontend.split.Attribution
 import org.jraf.resplit.fontend.split.SplitReceipt
+import org.jraf.resplit.fontend.split.SplitReceiptItem
 import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.fromJson
 import org.w3c.dom.url.URLSearchParams
@@ -64,60 +71,142 @@ private fun MainScreen(receipt: Receipt?) {
   }
   var splitReceipt by remember { mutableStateOf(SplitReceipt(receipt)) }
 
+  SplitSection(
+    splitReceipt = splitReceipt,
+    onSplitChange = { newSplitReceipt ->
+      splitReceipt = newSplitReceipt
+    },
+  )
+
+  WhoPaidSection(
+    splitReceipt = splitReceipt,
+    onSelect = { selectedAttribution ->
+      splitReceipt = splitReceipt.copy(whoPaid = selectedAttribution)
+    },
+  )
+
+  WhoOwesSection(splitReceipt = splitReceipt)
+}
+
+@Composable
+private fun SplitSection(
+  splitReceipt: SplitReceipt,
+  onSplitChange: (SplitReceipt) -> Unit,
+) {
   Ul {
     for (splitReceiptItem in splitReceipt.items) {
       Li {
-        Text("${splitReceiptItem.label} - ${splitReceiptItem.price}")
+        ReceiptItemAndPrice(splitReceiptItem)
+
         AttributionSelector(
           currentAttribution = splitReceiptItem.forWho,
+          additionalClass = "vertical",
           onSelect = { selectedAttribution ->
-            splitReceipt = splitReceipt.copy(
-              items = splitReceipt.items.map { item ->
-                if (item === splitReceiptItem) {
-                  splitReceiptItem.copy(forWho = selectedAttribution)
-                } else {
-                  item
-                }
-              },
+            onSplitChange(
+              splitReceipt.copy(
+                items = splitReceipt.items.map { item ->
+                  if (item === splitReceiptItem) {
+                    splitReceiptItem.copy(forWho = selectedAttribution)
+                  } else {
+                    item
+                  }
+                },
+              ),
             )
           },
         )
       }
     }
   }
+}
 
-  Div {
-    Text("Who paid?")
+@Composable
+private fun ReceiptItemAndPrice(splitReceiptItem: SplitReceiptItem) {
+  Div(
+    attrs = {
+      classes("receipt-item-label-and-price")
+    },
+  ) {
+    Div(
+      attrs = {
+        classes("receipt-item-label")
+      },
+    ) {
+      Text(splitReceiptItem.label.lowercase())
+    }
+
+    Div(
+      attrs = {
+        classes("receipt-item-price")
+      },
+    ) {
+      Text(splitReceiptItem.price.formattedPrice())
+    }
+  }
+}
+
+@Composable
+private fun WhoPaidSection(
+  splitReceipt: SplitReceipt,
+  onSelect: (Attribution) -> Unit,
+) {
+  Div(
+    attrs = {
+      classes("who-paid")
+    },
+  ) {
+    H2 {
+      Text("💸 Who paid?")
+    }
     AttributionSelector(
       currentAttribution = splitReceipt.whoPaid,
-      onSelect = { selectedAttribution ->
-        splitReceipt = splitReceipt.copy(whoPaid = selectedAttribution)
-      },
+      additionalClass = "horizontal",
+      onSelect = onSelect,
     )
   }
+}
 
-  Div {
-    val (attribution, amount) = splitReceipt.whoOwesHowMuch
-    Text("${attribution} owes ${amount.toPlainString()} €")
+@Composable
+private fun WhoOwesSection(splitReceipt: SplitReceipt) {
+  val (attribution, amount) = splitReceipt.whoOwesHowMuch
+  H2(
+    attrs = {
+      classes("net-debt")
+      onClick {
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch {
+          navigator.clipboard.writeText(amount.toStringExpanded()).await()
+        }
+
+      }
+    },
+  ) {
+    Text("💰 ${attribution.formattedName()} owes ${amount.formattedPrice()}")
   }
 }
 
 @Composable
 private fun AttributionSelector(
   currentAttribution: Attribution,
+  additionalClass: String,
   onSelect: (Attribution) -> Unit,
 ) {
-  AttributionSelectorItem(currentAttribution, Attribution.PERSON_1) {
-    onSelect(Attribution.PERSON_1)
-  }
-  AttributionSelectorItem(currentAttribution, Attribution.PERSON_2) {
-    onSelect(Attribution.PERSON_2)
-  }
-  AttributionSelectorItem(currentAttribution, Attribution.BOTH) {
-    onSelect(Attribution.BOTH)
+  Div(
+    attrs = {
+      classes("attribution-selector", additionalClass)
+    },
+  ) {
+    AttributionSelectorItem(currentAttribution, Attribution.PERSON_1) {
+      onSelect(Attribution.PERSON_1)
+    }
+    AttributionSelectorItem(currentAttribution, Attribution.PERSON_2) {
+      onSelect(Attribution.PERSON_2)
+    }
+    AttributionSelectorItem(currentAttribution, Attribution.BOTH) {
+      onSelect(Attribution.BOTH)
+    }
   }
 }
-
 
 @Composable
 private fun AttributionSelectorItem(
@@ -125,17 +214,55 @@ private fun AttributionSelectorItem(
   attributionChoice: Attribution,
   onClick: () -> Unit,
 ) {
-  A(
+  Button(
     attrs = {
-      if (attributionChoice == currentAttribution) {
-        classes("selected")
-      } else {
-        onClick {
-          onClick()
-        }
+      classes(
+        buildList {
+          add("button")
+          if (attributionChoice == currentAttribution) {
+            when (attributionChoice) {
+              Attribution.PERSON_1 -> add("button-person-1")
+              Attribution.PERSON_2 -> add("button-person-2")
+              Attribution.BOTH -> add("button-neutral")
+            }
+          } else {
+            add("button-unselected")
+          }
+        },
+      )
+      if (attributionChoice != currentAttribution) {
+        onClick { onClick() }
       }
     },
   ) {
-    Text(attributionChoice.toString())
+    Text(
+      attributionChoice.formattedName(),
+    )
   }
+}
+
+private fun Attribution.formattedName(): String = when (this) {
+  Attribution.PERSON_1 -> "BoD"
+  Attribution.PERSON_2 -> "Carm"
+  Attribution.BOTH -> "Both"
+}
+
+private fun BigDecimal.formattedPrice(): String {
+  val expanded = toStringExpanded()
+  val decimalPart = expanded.substringAfterLast('.', "")
+  val formatted =
+    when {
+      decimalPart.isEmpty() -> {
+        "$expanded.00"
+      }
+
+      decimalPart.length < 2 -> {
+        "$expanded${"0".repeat(2 - decimalPart.length)}"
+      }
+
+      else -> {
+        expanded
+      }
+    }
+  return "$formatted\u00A0€"
 }

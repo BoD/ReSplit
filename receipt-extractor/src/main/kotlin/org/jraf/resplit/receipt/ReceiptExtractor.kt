@@ -83,7 +83,7 @@ class ReceiptExtractor(
     }
   }
 
-  fun fakeExtractFromUrl(url: String): Result<Receipt> {
+  fun extractFakeValues(): Result<Receipt> {
     return Result.success(
       Receipt(
         total = "79.12",

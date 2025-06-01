@@ -1,0 +1,164 @@
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #F0F4FF;
+    --color: #000;
+    --button-background-color-neutral: #245390;
+    --button-background-color-person-1: #AD4F00;
+    --button-background-color-person-2: #006600;
+    --button-background-color-unselected: #E4E4E7;
+    --button-background-color-active: #F4F4F5;
+    --button-color: #FFF;
+    --button-color-active: #09090B;
+    --button-border-color: #E4E4E7;
+    --input-border-color: #C0CCDA;
+    --input-box-shadow-color: #0000000d;
+    --li-color: #2E2E2E;
+    --li-odd-child-brightness: 0.95;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0A0F14;
+    --color: #FFF;
+    --button-background-color-neutral: #245390;
+    --button-background-color-person-1: #AD4F00;
+    --button-background-color-person-2: #006600;
+    --button-background-color-unselected: #2A2A2E;
+    --button-background-color-active: #2A2A2E;
+    --button-color: #FFF;
+    --button-color-active: #F6F6F6;
+    --button-border-color: #8F9BB3;
+    --input-border-color: #8F9BB3;
+    --input-box-shadow-color: #00000099;
+    --li-color: #B0B0B0;
+    --li-odd-child-brightness: 1.5;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--color);
+  font-family: system-ui, Roboto, Arial, ui-sans-serif;
+  padding: 1rem;
+}
+
+.no-margin {
+  margin: 0;
+  padding: 0;
+}
+
+.button {
+  display: inline-block;
+  text-align: center;
+  border-color: var(--input-border-color);
+  border-radius: 6px;
+  border-style: solid;
+  border-width: 1px;
+  box-shadow: var(--input-box-shadow-color) 0 1px 2px 0px;
+  box-sizing: border-box;
+  font-size: 1.2em;
+  font-weight: 400;
+  height: 2.5rem;
+  line-height: 1.25rem;
+  outline-width: 2px;
+  outline-offset: 2px;
+  padding-inline: 12px;
+  cursor: pointer;
+  color: var(--button-color);
+  padding: 0.5rem 1rem;
+}
+
+.button:active {
+  background-color: var(--button-background-color-active) !important;
+  color: var(--button-color-active);
+}
+
+.button-person-1 {
+  background-color: var(--button-background-color-person-1);
+}
+
+.button-person-2 {
+  background-color: var(--button-background-color-person-2);
+}
+
+.button-neutral {
+  background-color: var(--button-background-color-neutral);
+}
+
+.button-unselected {
+  background-color: var(--button-background-color-unselected);
+}
+
+ul {
+  padding-inline: 0;
+  list-style-type: none;
+}
+
+li {
+  color: var(--li-color);
+  padding: 6px 6px 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+li:nth-child(odd) {
+  backdrop-filter: brightness(var(--li-odd-child-brightness));
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.upload-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.receipt-item-label-and-price {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: .25em;
+}
+
+.receipt-item-label {
+  text-transform: capitalize;
+}
+
+.receipt-item-price {
+  font-size: 0.75em;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.attribution-selector {
+  display: flex;
+  gap: 3px;
+}
+
+.attribution-selector.horizontal {
+  flex-direction: row;
+}
+
+.attribution-selector.vertical {
+  flex-direction: column;
+}
+
+.attribution-selector.horizontal .button {
+  flex-grow: 1;
+}
+
+h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  padding-top: 1.5rem;
+}
+
+.net-debt {
+  font-size: 1.75em;
+  text-align: center;
+}

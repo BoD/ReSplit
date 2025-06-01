@@ -26,8 +26,14 @@
 package org.jraf.resplit.fontend.split
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import com.ionspin.kotlin.bignum.decimal.DecimalMode
+import com.ionspin.kotlin.bignum.decimal.RoundingMode
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.ReceiptItem
+
+private val decimalMode = DecimalMode(scale = 2, roundingMode = RoundingMode.ROUND_HALF_TO_EVEN)
+private val two = 2.toBigDecimal(decimalMode = decimalMode)
 
 enum class Attribution {
   PERSON_1,
@@ -45,22 +51,20 @@ data class SplitReceipt(
   )
 
   val total: BigDecimal
-    get() = items.fold(BigDecimal.ZERO) { acc, item ->
-      acc + item.price
-    }
+    get() = items.sumBy { it.price }
 
   val whoOwesHowMuch: Pair<Attribution, BigDecimal>
     get() {
       return when (whoPaid) {
         Attribution.PERSON_1 -> {
           val person2Owes = items.filter { it.forWho == Attribution.PERSON_2 }.sumBy { it.price } +
-            items.filter { it.forWho == Attribution.BOTH }.sumBy { it.price } / 2
+            items.filter { it.forWho == Attribution.BOTH }.sumBy { it.price } / two
           Attribution.PERSON_2 to person2Owes
         }
 
         Attribution.PERSON_2 -> {
           val person1Owes = items.filter { it.forWho == Attribution.PERSON_1 }.sumBy { it.price } +
-            items.filter { it.forWho == Attribution.BOTH }.sumBy { it.price } / 2
+            items.filter { it.forWho == Attribution.BOTH }.sumBy { it.price } / two
           Attribution.PERSON_1 to person1Owes
         }
 
@@ -68,9 +72,9 @@ data class SplitReceipt(
           val spentForPerson1 = items.filter { it.forWho == Attribution.PERSON_1 }.sumBy { it.price }
           val spentForPerson2 = items.filter { it.forWho == Attribution.PERSON_2 }.sumBy { it.price }
           if (spentForPerson1 > spentForPerson2) {
-            Attribution.PERSON_1 to (spentForPerson1 - spentForPerson2) / 2
+            Attribution.PERSON_1 to (spentForPerson1 - spentForPerson2) / two
           } else {
-            Attribution.PERSON_2 to (spentForPerson2 - spentForPerson1) / 2
+            Attribution.PERSON_2 to (spentForPerson2 - spentForPerson1) / two
           }
         }
       }
@@ -78,7 +82,7 @@ data class SplitReceipt(
 }
 
 private fun <T> Iterable<T>.sumBy(selector: (T) -> BigDecimal): BigDecimal {
-  return fold(BigDecimal.ZERO) { acc, item ->
+  return fold(BigDecimal.ZERO.copy(decimalMode = decimalMode)) { acc, item ->
     acc + selector(item)
   }
 }
@@ -90,7 +94,7 @@ data class SplitReceiptItem(
 ) {
   constructor(item: ReceiptItem) : this(
     label = item.label,
-    price = BigDecimal.parseString(item.price),
+    price = item.price.toBigDecimal(decimalMode = decimalMode),
     forWho = Attribution.PERSON_1,
   )
 }
