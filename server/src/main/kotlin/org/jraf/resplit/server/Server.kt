@@ -28,6 +28,7 @@ package org.jraf.resplit.server
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
+import io.ktor.http.encodeURLParameter
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -44,6 +45,7 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.request.receiveMultipart
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -53,6 +55,7 @@ import kotlinx.serialization.json.Json
 import org.jraf.klibnanolog.logd
 import org.jraf.klibnanolog.logw
 import org.jraf.resplit.receipt.Receipt
+import org.jraf.resplit.receipt.toJsonString
 import org.slf4j.event.Level
 import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
@@ -61,16 +64,18 @@ import kotlin.uuid.Uuid
 private const val ENV_PORT = "PORT"
 private const val PORT_DEFAULT = 8042
 
-private const val ENV_TEMP_DIR = "TEMP_DIR"
-private val TEMP_DIR_DEFAULT = "${System.getProperty("java.io.tmpdir")}/resplit"
-
 class Server(
   publicBaseUrl: String,
-  private val onReceiptUpload: (suspend (url: String) -> Result<Receipt>)
+  private val extractReceipt: (suspend (receiptSource: ReceiptSource) -> Result<Receipt>),
 ) {
+  sealed interface ReceiptSource {
+    data class File(val file: java.io.File) : ReceiptSource
+    data class Url(val url: String) : ReceiptSource
+  }
+
   private val publicBaseUrl: String = publicBaseUrl.trimEnd('/')
 
-  private val tempDir: File = File(System.getenv(ENV_TEMP_DIR) ?: TEMP_DIR_DEFAULT).apply {
+  private val receiptsDir: File = File(System.getProperty("java.io.tmpdir") + "/resplit").apply {
     mkdirs()
   }
 
@@ -130,29 +135,19 @@ class Server(
 
   private fun Application.routing() {
     routing {
-//      get("/") {
-//        call.respondText(
-//          text = """
-//            Usage:
-//            ${call.request.local.scheme}://${call.request.local.serverHost}:${call.request.local.serverPort}/upload-receipt
-//          """.trimIndent(),
-//          status = HttpStatusCode.OK,
-//        )
-//      }
-
-      staticResources("/", "html")
-      staticFiles("/receipts", tempDir)
+      staticResources("/", "")
+      staticFiles("/receipts", receiptsDir)
 
       post("/receipt") {
-        var fileName: String? = null
+        var extension: String? = null
         var file: File? = null
         val multipartData = call.receiveMultipart(formFieldLimit = 10 * 1024 * 1024)
         multipartData.forEachPart { part ->
           when (part) {
             is PartData.FileItem -> {
-              val extension = part.originalFileName!!.substringAfterLast('.', "jpg")
-              fileName = @OptIn(ExperimentalUuidApi::class) Uuid.random().toString() + ".$extension"
-              file = File(tempDir, fileName)
+              extension = part.contentType?.contentSubtype ?: part.originalFileName!!.substringAfterLast('.', "pdf")
+              val fileName = @OptIn(ExperimentalUuidApi::class) Uuid.random().toString() + ".$extension"
+              file = File(receiptsDir, fileName)
               part.provider().copyAndClose(file.writeChannel())
               return@forEachPart
             }
@@ -161,20 +156,22 @@ class Server(
           }
           part.dispose()
         }
-        logd("File written to $file")
-        // TODO delete file
-        val filePublicUrl = "$publicBaseUrl/receipts/$fileName"
-        onReceiptUpload(filePublicUrl).onFailure { e ->
-          logw(e, "Failed to parse receipt")
-          call.respondText("Failed to upload receipt: ${e.message}", status = HttpStatusCode.InternalServerError)
-          return@post
-        }.onSuccess { receipt ->
-          logd("Receipt uploaded successfully: $receipt")
-          call.respondText(receipt.toString(), status = HttpStatusCode.OK)
-        }
-
-//        call.respondRedirect("/receipts/$fileName", permanent = true)
-
+        logd("File written to ${file!!}")
+        extractReceipt(
+          when (extension) {
+            "pdf" -> ReceiptSource.File(file)
+            else -> ReceiptSource.Url("${publicBaseUrl}/receipts/${file.name}")
+          },
+        )
+          .onFailure { e ->
+            logw(e, "Failed to extract receipt")
+            call.respondText("Failed to extract receipt: ${e.message}", status = HttpStatusCode.InternalServerError)
+          }
+          .onSuccess { receipt ->
+            logd("Receipt extracted successfully: $receipt")
+            call.respondRedirect("$publicBaseUrl/split.html?receipt=" + receipt.toJsonString().encodeURLParameter(), permanent = false)
+          }
+        file.delete()
       }
     }
   }

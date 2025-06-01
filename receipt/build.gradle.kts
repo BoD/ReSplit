@@ -6,6 +6,12 @@ plugins {
 kotlin {
   jvmToolchain(11)
   jvm()
+  js {
+    browser()
+    compilerOptions {
+      target.set("es2015")
+    }
+  }
 
   sourceSets {
     commonMain {

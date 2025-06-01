@@ -10,8 +10,8 @@ pluginManagement {
 dependencyResolutionManagement {
   @Suppress("UnstableApiUsage")
   repositories {
-    mavenLocal()
     mavenCentral()
+    mavenLocal()
   }
 }
 
@@ -25,4 +25,5 @@ include(
   ":receipt-extractor",
   ":server",
   ":main",
+  ":frontend",
 )

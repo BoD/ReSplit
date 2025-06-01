@@ -31,18 +31,24 @@ import org.jraf.resplit.receipt.ReceiptExtractor
 import org.jraf.resplit.server.Server
 import org.slf4j.simple.SimpleLogger
 
+
 class Main {
   private val receiptExtractor =
     ReceiptExtractor(openAiApiKey = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable is not set"))
 
+  private val publicBaseUrl = System.getenv("PUBLIC_BASE_URL")
+    ?: error("PUBLIC_BASE_URL environment variable is not set. This is the URL that the server will be accessible at, e.g. https://example.com")
+
   fun start() {
     logi("Starting server")
     Server(
-      publicBaseUrl = "https://2e32-2a01-e0a-de8-27a0-bde8-15f5-df0f-7855.ngrok-free.app",
-    ) { url ->
-      logd("Extracting receipt from URL: $url")
-      receiptExtractor.extractFromUrl(url)
-//      receiptExtractor.extractFromUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/ReceiptSwiss.jpg/1280px-ReceiptSwiss.jpg")
+      publicBaseUrl = publicBaseUrl,
+    ) { receiptSource ->
+      logd("Extracting receipt from source: $receiptSource")
+      when (receiptSource) {
+        is Server.ReceiptSource.Url -> receiptExtractor.extractFromImageUrl(receiptSource.url)
+        is Server.ReceiptSource.File -> receiptExtractor.extractFromPdfFile(receiptSource.file)
+      }
     }.start()
   }
 }

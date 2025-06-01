@@ -36,7 +36,7 @@ docker {
     baseImage.set("adoptopenjdk/openjdk11-openj9:x86_64-ubuntu-jre-11.0.26_4_openj9-0.49.0")
     maintainer.set("BoD <BoD@JRAF.org>")
     ports.set(listOf(8042))
-    images.add("bodlulu/${rootProject.name}:latest")
+    images.add("bodlulu/${rootProject.name.lowercase()}:latest")
     jvmArgs.set(listOf("-Xms16m", "-Xmx128m"))
   }
   registryCredentials {

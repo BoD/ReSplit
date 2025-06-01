@@ -4,6 +4,13 @@ plugins {
 
 kotlin {
   jvmToolchain(11)
+
+  // Add the results of compiling the frontend project as resources so they can be served by the server.
+  sourceSets {
+    main {
+      resources.srcDir(project(":frontend").getTasksByName("jsBrowserDistribution", false))
+    }
+  }
 }
 
 dependencies {

@@ -25,16 +25,39 @@
 
 package org.jraf.resplit.receipt
 
-data class Receipt(
-  @get:JsonPropertyDescription("Total amount of the receipt, without currency, e.g. \"123.45\"")
-  val total: String,
-  val items: List<ReceiptItem>,
-)
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
+@Serializable
+@SerialName("R")
+data class Receipt(
+  @get:JsonPropertyDescription("Total amount of the receipt, without currency, always use dot, e.g. \"123.45\"")
+  @SerialName("t")
+  val total: String,
+
+  @SerialName("i")
+  val items: List<ReceiptItem>,
+) {
+  companion object
+}
+
+@Serializable
+@SerialName("I")
 data class ReceiptItem(
   @get:JsonPropertyDescription("Label of the item, e.g. \"Milk\"")
+  @SerialName("l")
   val label: String,
 
-  @get:JsonPropertyDescription("Price of the item, without currency, e.g. \"12.34\"")
+  @get:JsonPropertyDescription("Price of the item, without currency, always use dot, e.g. \"12.34\"")
+  @SerialName("p")
   val price: String,
 )
+
+fun Receipt.toJsonString(): String {
+  return Json.encodeToString(this)
+}
+
+fun Receipt.Companion.fromJson(json: String): Receipt {
+  return Json.decodeFromString(json)
+}
