@@ -8,6 +8,7 @@
     --button-background-color-unselected: #E4E4E7;
     --button-background-color-active: #F4F4F5;
     --button-color: #FFF;
+    --button-color-unselected: #666;
     --button-color-active: #09090B;
     --button-border-color: #E4E4E7;
     --input-border-color: #C0CCDA;
@@ -27,6 +28,7 @@
     --button-background-color-unselected: #2A2A2E;
     --button-background-color-active: #2A2A2E;
     --button-color: #FFF;
+    --button-color-unselected: #AAA;
     --button-color-active: #F6F6F6;
     --button-border-color: #8F9BB3;
     --input-border-color: #8F9BB3;
@@ -87,6 +89,7 @@ body {
 }
 
 .button-unselected {
+  color: var(--button-color-unselected);
   background-color: var(--button-background-color-unselected);
 }
 
