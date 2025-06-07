@@ -45,11 +45,15 @@ class Main {
       publicBaseUrl = publicBaseUrl,
     ) { receiptSource ->
       logd("Extracting receipt from source: $receiptSource")
-      when (receiptSource) {
-        is Server.ReceiptSource.Url -> receiptExtractor.extractFromImageUrl(receiptSource.url)
-        is Server.ReceiptSource.File -> receiptExtractor.extractFromPdfFile(receiptSource.file)
+      if (System.getenv("FAKE_EXTRACTOR") == "true") {
+        logi("Fake extractor enabled, returning fake values")
+        receiptExtractor.extractFakeValues()
+      } else {
+        when (receiptSource) {
+          is Server.ReceiptSource.Url -> receiptExtractor.extractFromImageUrl(receiptSource.url)
+          is Server.ReceiptSource.File -> receiptExtractor.extractFromPdfFile(receiptSource.file)
+        }
       }
-//      receiptExtractor.extractFakeValues()
     }.start()
   }
 }

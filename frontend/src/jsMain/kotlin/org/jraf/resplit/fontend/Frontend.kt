@@ -46,8 +46,10 @@ import org.jetbrains.compose.web.renderComposable
 import org.jraf.resplit.fontend.split.Attribution
 import org.jraf.resplit.fontend.split.SplitReceipt
 import org.jraf.resplit.fontend.split.SplitReceiptItem
+import org.jraf.resplit.fontend.split.canonicalLabel
 import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.fromJson
+import org.w3c.dom.set
 import org.w3c.dom.url.URLSearchParams
 
 class Frontend {
@@ -69,7 +71,7 @@ private fun MainScreen(receipt: Receipt?) {
     Text("No receipt found")
     return
   }
-  var splitReceipt by remember { mutableStateOf(SplitReceipt(receipt)) }
+  var splitReceipt by remember { mutableStateOf(SplitReceipt(receipt, window.localStorage)) }
 
   SplitSection(
     splitReceipt = splitReceipt,
@@ -113,6 +115,8 @@ private fun SplitSection(
                 },
               ),
             )
+
+            window.localStorage[splitReceiptItem.canonicalLabel()] = selectedAttribution.name
           },
         )
       }

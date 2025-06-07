@@ -31,6 +31,8 @@ import com.ionspin.kotlin.bignum.decimal.RoundingMode
 import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.ReceiptItem
+import org.w3c.dom.Storage
+import org.w3c.dom.get
 
 private val decimalMode = DecimalMode(scale = 2, roundingMode = RoundingMode.ROUND_HALF_TO_EVEN)
 private val two = 2.toBigDecimal(decimalMode = decimalMode)
@@ -45,8 +47,11 @@ data class SplitReceipt(
   val items: List<SplitReceiptItem>,
   val whoPaid: Attribution,
 ) {
-  constructor(receipt: Receipt) : this(
-    items = receipt.items.map { SplitReceiptItem(it) },
+  constructor(receipt: Receipt, storage: Storage) : this(
+    items = receipt.items.map { receiptItem ->
+      val savedAttribution = storage[receiptItem.canonicalLabel()]?.let { Attribution.valueOf(it) } ?: Attribution.PERSON_1
+      SplitReceiptItem(receiptItem, savedAttribution)
+    },
     whoPaid = Attribution.PERSON_1,
   )
 
@@ -92,9 +97,19 @@ data class SplitReceiptItem(
   val price: BigDecimal,
   val forWho: Attribution,
 ) {
-  constructor(item: ReceiptItem) : this(
+  constructor(item: ReceiptItem, forWho: Attribution) : this(
     label = item.label,
     price = item.price.toBigDecimal(decimalMode = decimalMode),
-    forWho = Attribution.PERSON_1,
+    forWho = forWho,
   )
 }
+
+fun SplitReceiptItem.canonicalLabel(): String {
+  return label.canonical()
+}
+
+fun ReceiptItem.canonicalLabel(): String {
+  return label.canonical()
+}
+
+private fun String.canonical(): String = lowercase().replace(Regex("[^a-z]"), "").take(10)
