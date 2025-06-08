@@ -45,7 +45,7 @@ class Main {
       publicBaseUrl = publicBaseUrl,
     ) { receiptSource ->
       logd("Extracting receipt from source: $receiptSource")
-      if (System.getenv("FAKE_EXTRACTOR") == "true") {
+      if (System.getenv("DEBUG_FAKE_EXTRACTOR") == "true") {
         logi("Fake extractor enabled, returning fake values")
         receiptExtractor.extractFakeValues()
       } else {

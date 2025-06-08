@@ -15,6 +15,8 @@
     --input-box-shadow-color: #0000000d;
     --li-color: #2E2E2E;
     --li-odd-child-brightness: 0.95;
+    --snackbar-background-color: #006600;
+    --snackbar-text-color: #FFF;
   }
 }
 
@@ -35,6 +37,8 @@
     --input-box-shadow-color: #00000099;
     --li-color: #B0B0B0;
     --li-odd-child-brightness: 1.5;
+    --snackbar-background-color: #006600;
+    --snackbar-text-color: #FFF;
   }
 }
 
@@ -164,4 +168,42 @@ h2 {
 .net-debt {
   font-size: 1.75em;
   text-align: center;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating {
+  display: inline-block;
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes show {
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.snackBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem;
+  box-shadow: 0 0 1rem .5rem black;
+  background-color: var(--snackbar-background-color);
+  color: var(--snackbar-text-color);
+  opacity: 0;
+  transform: rotateX(-90deg);
+  transform-origin: top center;
+  animation: show 300ms cubic-bezier(0.38, 0.97, 0.56, 0.76) forwards;
 }

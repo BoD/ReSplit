@@ -26,6 +26,8 @@
 package org.jraf.resplit.fontend
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +37,8 @@ import kotlinx.browser.window
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.await
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
@@ -51,222 +55,257 @@ import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.fromJson
 import org.w3c.dom.set
 import org.w3c.dom.url.URLSearchParams
+import kotlin.js.Date
 
 class Frontend {
+  private val snackBarSpec: MutableStateFlow<SnackBarSpec?> = MutableStateFlow(null)
+
   fun start() {
     val urlParams = URLSearchParams(window.location.search)
     val receiptJson = urlParams.get("receipt")
     val receipt = receiptJson?.let { Receipt.fromJson(it) }
 
     renderComposable(rootElementId = "root") {
+      val snackBarSpec: SnackBarSpec? by snackBarSpec.collectAsState()
       MainScreen(receipt)
+
+      if (snackBarSpec != null) {
+        SnackBar(snackBarSpec!!)
+      }
     }
   }
-}
 
+  @Composable
+  private fun MainScreen(receipt: Receipt?) {
+    if (receipt == null) {
+      Text("No receipt found")
+      return
+    }
+    var splitReceipt by remember { mutableStateOf(SplitReceipt(receipt, window.localStorage)) }
 
-@Composable
-private fun MainScreen(receipt: Receipt?) {
-  if (receipt == null) {
-    Text("No receipt found")
-    return
+    SplitSection(
+      splitReceipt = splitReceipt,
+      onSplitChange = { newSplitReceipt ->
+        splitReceipt = newSplitReceipt
+      },
+    )
+
+    WhoPaidSection(
+      splitReceipt = splitReceipt,
+      onSelect = { selectedAttribution ->
+        splitReceipt = splitReceipt.copy(whoPaid = selectedAttribution)
+      },
+    )
+
+    WhoOwesSection(splitReceipt = splitReceipt)
   }
-  var splitReceipt by remember { mutableStateOf(SplitReceipt(receipt, window.localStorage)) }
 
-  SplitSection(
-    splitReceipt = splitReceipt,
-    onSplitChange = { newSplitReceipt ->
-      splitReceipt = newSplitReceipt
-    },
-  )
+  @Composable
+  private fun SplitSection(
+    splitReceipt: SplitReceipt,
+    onSplitChange: (SplitReceipt) -> Unit,
+  ) {
+    Ul {
+      for (splitReceiptItem in splitReceipt.items) {
+        Li {
+          ReceiptItemAndPrice(splitReceiptItem)
 
-  WhoPaidSection(
-    splitReceipt = splitReceipt,
-    onSelect = { selectedAttribution ->
-      splitReceipt = splitReceipt.copy(whoPaid = selectedAttribution)
-    },
-  )
+          AttributionSelector(
+            currentAttribution = splitReceiptItem.forWho,
+            additionalClass = "vertical",
+            onSelect = { selectedAttribution ->
+              onSplitChange(
+                splitReceipt.copy(
+                  items = splitReceipt.items.map { item ->
+                    if (item === splitReceiptItem) {
+                      splitReceiptItem.copy(forWho = selectedAttribution)
+                    } else {
+                      item
+                    }
+                  },
+                ),
+              )
 
-  WhoOwesSection(splitReceipt = splitReceipt)
-}
+              window.localStorage[splitReceiptItem.canonicalLabel()] = selectedAttribution.name
+            },
+          )
+        }
+      }
+    }
+  }
 
-@Composable
-private fun SplitSection(
-  splitReceipt: SplitReceipt,
-  onSplitChange: (SplitReceipt) -> Unit,
-) {
-  Ul {
-    for (splitReceiptItem in splitReceipt.items) {
-      Li {
-        ReceiptItemAndPrice(splitReceiptItem)
+  @Composable
+  private fun ReceiptItemAndPrice(splitReceiptItem: SplitReceiptItem) {
+    Div(
+      attrs = {
+        classes("receipt-item-label-and-price")
+      },
+    ) {
+      Div(
+        attrs = {
+          classes("receipt-item-label")
+        },
+      ) {
+        Text(splitReceiptItem.label.lowercase())
+      }
 
-        AttributionSelector(
-          currentAttribution = splitReceiptItem.forWho,
-          additionalClass = "vertical",
-          onSelect = { selectedAttribution ->
-            onSplitChange(
-              splitReceipt.copy(
-                items = splitReceipt.items.map { item ->
-                  if (item === splitReceiptItem) {
-                    splitReceiptItem.copy(forWho = selectedAttribution)
-                  } else {
-                    item
-                  }
-                },
-              ),
-            )
+      Div(
+        attrs = {
+          classes("receipt-item-price")
+        },
+      ) {
+        Text(splitReceiptItem.price.formattedPrice())
+      }
+    }
+  }
 
-            window.localStorage[splitReceiptItem.canonicalLabel()] = selectedAttribution.name
+  @Composable
+  private fun WhoPaidSection(
+    splitReceipt: SplitReceipt,
+    onSelect: (Attribution) -> Unit,
+  ) {
+    Div(
+      attrs = {
+        classes("who-paid")
+      },
+    ) {
+      H2 {
+        Text("💸 Who paid?")
+      }
+      AttributionSelector(
+        currentAttribution = splitReceipt.whoPaid,
+        additionalClass = "horizontal",
+        onSelect = onSelect,
+      )
+    }
+  }
+
+  @Composable
+  private fun WhoOwesSection(splitReceipt: SplitReceipt) {
+    val (attribution, amount) = splitReceipt.whoOwesHowMuch
+    H2(
+      attrs = {
+        classes("net-debt")
+        onClick {
+          snackBarSpec.value = SnackBarSpec("Copied to clipboard!")
+          @OptIn(DelicateCoroutinesApi::class)
+          GlobalScope.launch {
+            navigator.clipboard.writeText(amount.toStringExpanded()).await()
+          }
+        }
+      },
+    ) {
+      Text("💰 ${attribution.formattedName()} owes ${amount.formattedPrice()}")
+    }
+  }
+
+  @Composable
+  private fun AttributionSelector(
+    currentAttribution: Attribution,
+    additionalClass: String,
+    onSelect: (Attribution) -> Unit,
+  ) {
+    Div(
+      attrs = {
+        classes("attribution-selector", additionalClass)
+      },
+    ) {
+      AttributionSelectorItem(currentAttribution, Attribution.PERSON_1) {
+        onSelect(Attribution.PERSON_1)
+      }
+      AttributionSelectorItem(currentAttribution, Attribution.PERSON_2) {
+        onSelect(Attribution.PERSON_2)
+      }
+      AttributionSelectorItem(currentAttribution, Attribution.BOTH) {
+        onSelect(Attribution.BOTH)
+      }
+    }
+  }
+
+  @Composable
+  private fun AttributionSelectorItem(
+    currentAttribution: Attribution,
+    attributionChoice: Attribution,
+    onClick: () -> Unit,
+  ) {
+    Button(
+      attrs = {
+        classes(
+          buildList {
+            add("button")
+            if (attributionChoice == currentAttribution) {
+              when (attributionChoice) {
+                Attribution.PERSON_1 -> add("button-person-1")
+                Attribution.PERSON_2 -> add("button-person-2")
+                Attribution.BOTH -> add("button-neutral")
+              }
+            } else {
+              add("button-unselected")
+            }
           },
         )
+        if (attributionChoice != currentAttribution) {
+          onClick { onClick() }
+        }
+      },
+    ) {
+      Text(
+        attributionChoice.formattedName(),
+      )
+    }
+  }
+
+  private class SnackBarSpec(
+    val message: String,
+  ) {
+    override fun equals(other: Any?): Boolean {
+      return false
+    }
+
+    override fun hashCode(): Int {
+      return Date().getMilliseconds()
+    }
+  }
+
+  @Composable
+  private fun SnackBar(snackBarSpec: SnackBarSpec) {
+    Div(
+      attrs = {
+        classes("snackBar")
+      },
+    ) {
+      LaunchedEffect(snackBarSpec) {
+        delay(4000)
+        this@Frontend.snackBarSpec.value = null
       }
+      Text(snackBarSpec.message)
     }
   }
-}
 
-@Composable
-private fun ReceiptItemAndPrice(splitReceiptItem: SplitReceiptItem) {
-  Div(
-    attrs = {
-      classes("receipt-item-label-and-price")
-    },
-  ) {
-    Div(
-      attrs = {
-        classes("receipt-item-label")
-      },
-    ) {
-      Text(splitReceiptItem.label.lowercase())
-    }
 
-    Div(
-      attrs = {
-        classes("receipt-item-price")
-      },
-    ) {
-      Text(splitReceiptItem.price.formattedPrice())
-    }
+  private fun Attribution.formattedName(): String = when (this) {
+    Attribution.PERSON_1 -> "BoD"
+    Attribution.PERSON_2 -> "Carm"
+    Attribution.BOTH -> "Both"
   }
-}
 
-@Composable
-private fun WhoPaidSection(
-  splitReceipt: SplitReceipt,
-  onSelect: (Attribution) -> Unit,
-) {
-  Div(
-    attrs = {
-      classes("who-paid")
-    },
-  ) {
-    H2 {
-      Text("💸 Who paid?")
-    }
-    AttributionSelector(
-      currentAttribution = splitReceipt.whoPaid,
-      additionalClass = "horizontal",
-      onSelect = onSelect,
-    )
-  }
-}
-
-@Composable
-private fun WhoOwesSection(splitReceipt: SplitReceipt) {
-  val (attribution, amount) = splitReceipt.whoOwesHowMuch
-  H2(
-    attrs = {
-      classes("net-debt")
-      onClick {
-        @OptIn(DelicateCoroutinesApi::class)
-        GlobalScope.launch {
-          navigator.clipboard.writeText(amount.toStringExpanded()).await()
+  private fun BigDecimal.formattedPrice(): String {
+    val expanded = toStringExpanded()
+    val decimalPart = expanded.substringAfterLast('.', "")
+    val formatted =
+      when {
+        decimalPart.isEmpty() -> {
+          "$expanded.00"
         }
 
+        decimalPart.length < 2 -> {
+          "$expanded${"0".repeat(2 - decimalPart.length)}"
+        }
+
+        else -> {
+          expanded
+        }
       }
-    },
-  ) {
-    Text("💰 ${attribution.formattedName()} owes ${amount.formattedPrice()}")
+    return "$formatted\u00A0€"
   }
-}
-
-@Composable
-private fun AttributionSelector(
-  currentAttribution: Attribution,
-  additionalClass: String,
-  onSelect: (Attribution) -> Unit,
-) {
-  Div(
-    attrs = {
-      classes("attribution-selector", additionalClass)
-    },
-  ) {
-    AttributionSelectorItem(currentAttribution, Attribution.PERSON_1) {
-      onSelect(Attribution.PERSON_1)
-    }
-    AttributionSelectorItem(currentAttribution, Attribution.PERSON_2) {
-      onSelect(Attribution.PERSON_2)
-    }
-    AttributionSelectorItem(currentAttribution, Attribution.BOTH) {
-      onSelect(Attribution.BOTH)
-    }
-  }
-}
-
-@Composable
-private fun AttributionSelectorItem(
-  currentAttribution: Attribution,
-  attributionChoice: Attribution,
-  onClick: () -> Unit,
-) {
-  Button(
-    attrs = {
-      classes(
-        buildList {
-          add("button")
-          if (attributionChoice == currentAttribution) {
-            when (attributionChoice) {
-              Attribution.PERSON_1 -> add("button-person-1")
-              Attribution.PERSON_2 -> add("button-person-2")
-              Attribution.BOTH -> add("button-neutral")
-            }
-          } else {
-            add("button-unselected")
-          }
-        },
-      )
-      if (attributionChoice != currentAttribution) {
-        onClick { onClick() }
-      }
-    },
-  ) {
-    Text(
-      attributionChoice.formattedName(),
-    )
-  }
-}
-
-private fun Attribution.formattedName(): String = when (this) {
-  Attribution.PERSON_1 -> "BoD"
-  Attribution.PERSON_2 -> "Carm"
-  Attribution.BOTH -> "Both"
-}
-
-private fun BigDecimal.formattedPrice(): String {
-  val expanded = toStringExpanded()
-  val decimalPart = expanded.substringAfterLast('.', "")
-  val formatted =
-    when {
-      decimalPart.isEmpty() -> {
-        "$expanded.00"
-      }
-
-      decimalPart.length < 2 -> {
-        "$expanded${"0".repeat(2 - decimalPart.length)}"
-      }
-
-      else -> {
-        expanded
-      }
-    }
-  return "$formatted\u00A0€"
 }

@@ -12,11 +12,70 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/logo_32x32.png">
   <link rel="icon" type="image/png" sizes="512x512" href="images/logo_512x512.png">
   <link rel="stylesheet" href="resplit.css"/>
+  <script>
+    async function onFileChange(form) {
+      form.file.disabled = true;
+      const label = document.getElementById("label");
+      label.innerHTML = "<span class=\"rotating\">⌛</span> Loading...";
+      label.classList.add("button-unselected");
+      let file = form.file.files[0];
+      if (file.type.toLowerCase().indexOf("pdf") === -1) {
+        file = await resizeImage(file)
+      }
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const response = await fetch("receipt", {
+          method: "POST",
+          body: formData
+        });
+        window.location.replace(response.url);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        label.innerHTML = "Upload failed. Try again.";
+        form.file.disabled = false;
+      }
+    }
+
+    async function resizeImage(file) {
+      const bitmap = await createImageBitmap(file);
+      let {width, height} = bitmap;
+      const maxSize = 1280;
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      const blob = await new Promise(resolve => {
+        canvas.toBlob(
+          blob => {
+            resolve(blob)
+          },
+          'image/jpeg',
+          .85
+        )
+      });
+      return new File([blob], file.name, file)
+    }
+  </script>
 <body class="no-margin">
-<form method="post" enctype="multipart/form-data" action="receipt" class="upload-form">
+<form class="upload-form">
   <label id="label" for="file" class="button button-neutral">Pick a receipt</label>
-  <input type="file" id="file" name="file" accept="image/*, application/pdf"
-         onchange="form.submit(); this.disabled = true; document.getElementById(&quot;label&quot;).innerHTML = &quot;Loading...&quot;;"/>
+  <input type="file" id="file" name="file" accept="image/*, application/pdf" onchange="onFileChange(form);"/>
 </form>
 </body>
 </html>

@@ -171,7 +171,11 @@ class Server(
             logd("Receipt extracted successfully: $receipt")
             call.respondRedirect("$publicBaseUrl/split.html?receipt=" + receipt.toJsonString().encodeURLParameter(), permanent = false)
           }
-        file.delete()
+
+        // Keep the file in debug mode
+        if (System.getenv("DEBUG_KEEP_TEMP_FILES") != "true") {
+          file.delete()
+        }
       }
     }
   }
