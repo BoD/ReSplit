@@ -70,7 +70,7 @@ class ReceiptExtractor(
     )
     val responseCreateParams: StructuredResponseCreateParams<Receipt> = ResponseCreateParams.builder()
       .inputOfResponse(listOf(responseInputItem))
-      .model(ChatModel.Companion.GPT_4_1_NANO)
+      .model(ChatModel.GPT_4_1_NANO)
       .text(Receipt::class.java)
       .build()
 

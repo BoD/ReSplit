@@ -1,9 +1,9 @@
 build
 out
 .gradle
+.kotlin
 *.iml
 .idea/*
 !.idea/copyright
 !.idea/codeStyles
 build.properties
-.kotlin/*
