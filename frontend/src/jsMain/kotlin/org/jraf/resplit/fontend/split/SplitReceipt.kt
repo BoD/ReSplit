@@ -113,3 +113,24 @@ fun ReceiptItem.canonicalLabel(): String {
 }
 
 private fun String.canonical(): String = lowercase().replace(Regex("[^a-z]"), "").take(10)
+
+fun String.toBigDecimalOrNull(): BigDecimal? {
+  return try {
+    toBigDecimal(decimalMode = decimalMode)
+  } catch (_: Exception) {
+    null
+  }
+}
+
+fun SplitReceipt.withPrice(
+  itemIndex: Int,
+  newPrice: BigDecimal,
+): SplitReceipt = copy(
+  items = items.mapIndexed { i, item ->
+    if (i == itemIndex) {
+      item.copy(price = newPrice)
+    } else {
+      item
+    }
+  },
+)

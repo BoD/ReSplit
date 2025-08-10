@@ -220,3 +220,8 @@ h2 {
   justify-content: space-between;
   padding-right: 6px;
 }
+
+input {
+  width: 4rem;
+  font-size: 1em;
+}

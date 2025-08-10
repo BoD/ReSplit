@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -40,19 +41,26 @@ import kotlinx.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import navigator.clipboard
+import org.jetbrains.compose.web.attributes.autoFocus
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.H2
 import org.jetbrains.compose.web.dom.Li
+import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
+import org.jetbrains.compose.web.dom.TextInput
 import org.jetbrains.compose.web.dom.Ul
 import org.jetbrains.compose.web.renderComposable
 import org.jraf.resplit.fontend.split.Attribution
 import org.jraf.resplit.fontend.split.SplitReceipt
 import org.jraf.resplit.fontend.split.SplitReceiptItem
 import org.jraf.resplit.fontend.split.canonicalLabel
+import org.jraf.resplit.fontend.split.toBigDecimalOrNull
+import org.jraf.resplit.fontend.split.withPrice
 import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.fromJson
+import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.set
 import org.w3c.dom.url.URLSearchParams
 import kotlin.js.Date
@@ -143,9 +151,21 @@ class Frontend {
     onSplitChange: (SplitReceipt) -> Unit,
   ) {
     Ul {
-      for (splitReceiptItem in splitReceipt.items) {
+      for ((index, splitReceiptItem) in splitReceipt.items.withIndex()) {
         Li {
-          ReceiptItemAndPrice(splitReceiptItem)
+          ReceiptItemAndPrice(
+            splitReceiptItem = splitReceiptItem,
+            onFocusOut = { input ->
+              val newPrice = input.toBigDecimalOrNull()
+              if (newPrice != null) {
+                onSplitChange(
+                  splitReceipt.withPrice(index, newPrice),
+                )
+              } else {
+                // Invalid input, do nothing
+              }
+            },
+          )
 
           AttributionSelector(
             currentAttribution = splitReceiptItem.forWho,
@@ -172,7 +192,12 @@ class Frontend {
   }
 
   @Composable
-  private fun ReceiptItemAndPrice(splitReceiptItem: SplitReceiptItem) {
+  private fun ReceiptItemAndPrice(
+    splitReceiptItem: SplitReceiptItem,
+    onFocusOut: (String) -> Unit,
+  ) {
+    var isBeingEdited by remember { mutableStateOf(false) }
+    var editedValue by remember { mutableStateOf(splitReceiptItem.price.toStringExpanded()) }
     Div(
       attrs = {
         classes("receipt-item-label-and-price")
@@ -191,7 +216,47 @@ class Frontend {
           classes("receipt-item-price")
         },
       ) {
-        Text(splitReceiptItem.price.formattedPrice())
+        if (isBeingEdited) {
+          TextInput(
+            value = editedValue,
+          ) {
+            inputMode("decimal")
+            id("receiptItemInput")
+            autoFocus() // <- useless on iOS
+//            onFocusIn {
+//              (it.target as HTMLInputElement).select()
+//            }
+            onFocusOut {
+              isBeingEdited = false
+              onFocusOut(editedValue)
+            }
+            onInput {
+              editedValue = it.value.replace(",", ".")
+            }
+            onKeyUp {
+              when (it.key) {
+                "Enter" -> {
+                  isBeingEdited = false
+                  onFocusOut(editedValue)
+                }
+              }
+            }
+          }
+
+          LaunchedEffect(Unit) {
+            // Focus the input when it is created (doesn't work on iOS ¯\_(ツ)_/¯)
+            (document.getElementById("receiptItemInput") as? HTMLInputElement)?.focus()
+          }
+
+        } else {
+          Span(
+            attrs = {
+              onClick { isBeingEdited = true }
+            },
+          ) {
+            Text(value = splitReceiptItem.price.formattedPrice())
+          }
+        }
       }
     }
   }
@@ -227,7 +292,7 @@ class Frontend {
           snackBarSpec.value = SnackBarSpec("Copied to clipboard!")
           @OptIn(DelicateCoroutinesApi::class)
           GlobalScope.launch {
-            navigator.clipboard.writeText(amount.toStringExpanded()).await()
+            clipboard.writeText(amount.toStringExpanded()).await()
           }
         }
       },
