@@ -40,7 +40,7 @@
     async function resizeImage(file) {
       const bitmap = await createImageBitmap(file);
       let {width, height} = bitmap;
-      const maxSize = 1280;
+      const maxSize = 1600;
       if (width > maxSize || height > maxSize) {
         if (width > height) {
           if (width > maxSize) {
@@ -74,7 +74,7 @@
   </script>
 <body class="no-margin">
 <form class="upload-form">
-  <label id="label" for="file" class="button button-neutral">Pick a receipt</label>
+  <label id="label" for="file" class="button button-neutral">📃 Pick a receipt</label>
   <input type="file" id="file" name="file" accept="image/*, application/pdf" onchange="onFileChange(form);"/>
 </form>
 </body>

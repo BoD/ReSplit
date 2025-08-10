@@ -83,6 +83,14 @@ class Frontend {
     }
     var splitReceipt by remember { mutableStateOf(SplitReceipt(receipt, window.localStorage)) }
 
+    TotalAndNewSection(
+      splitReceipt = splitReceipt,
+      onNewClick = {
+        // Navigate to <current url minus the path>
+        window.location.href = window.location.toString().substringBeforeLast('/')
+      },
+    )
+
     SplitSection(
       splitReceipt = splitReceipt,
       onSplitChange = { newSplitReceipt ->
@@ -98,6 +106,35 @@ class Frontend {
     )
 
     WhoOwesSection(splitReceipt = splitReceipt)
+  }
+
+  @Composable
+  private fun TotalAndNewSection(
+    splitReceipt: SplitReceipt,
+    onNewClick: () -> Unit,
+  ) {
+    Div(
+      attrs = {
+        classes("total-and-new")
+      },
+    ) {
+      H2(
+        attrs = {
+          classes("total")
+        },
+      ) {
+
+        Text("💸 Total: ${splitReceipt.total.formattedPrice()}")
+      }
+      Button(
+        attrs = {
+          classes("button", "button-small", "button-neutral")
+          onClick { onNewClick() }
+        },
+      ) {
+        Text("📃 New")
+      }
+    }
   }
 
   @Composable
@@ -170,7 +207,7 @@ class Frontend {
       },
     ) {
       H2 {
-        Text("💸 Who paid?")
+        Text("💰 Who paid?")
       }
       AttributionSelector(
         currentAttribution = splitReceipt.whoPaid,
@@ -195,7 +232,7 @@ class Frontend {
         }
       },
     ) {
-      Text("💰 ${attribution.formattedName()} owes ${amount.formattedPrice()}")
+      Text("🤝 ${attribution.formattedName()} owes ${amount.formattedPrice()}")
     }
   }
 
