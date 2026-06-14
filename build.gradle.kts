@@ -1,8 +1,10 @@
 plugins {
-  kotlin("multiplatform").apply(false)
-  kotlin("jvm").apply(false)
-  kotlin("plugin.serialization").apply(false)
-  id("com.bmuschko.docker-java-application").apply(false)
+  alias(libs.plugins.kotlin.multiplatform).apply(false)
+  alias(libs.plugins.kotlin.jvm).apply(false)
+  alias(libs.plugins.kotlin.serialization).apply(false)
+  alias(libs.plugins.kotlin.compose).apply(false)
+  alias(libs.plugins.compose).apply(false)
+  alias(libs.plugins.dockerJavaApplication).apply(false)
 }
 
 group = "org.jraf.resplit"

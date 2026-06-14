@@ -1,7 +1,7 @@
 plugins {
-  kotlin("multiplatform")
-  id("org.jetbrains.compose")
-  kotlin("plugin.compose")
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.compose)
+  alias(libs.plugins.kotlin.compose)
 }
 
 kotlin {
@@ -17,17 +17,17 @@ kotlin {
     commonMain {
       dependencies {
         // Logging
-        implementation("org.jraf:klibnanolog:_")
+        implementation(libs.klibnanolog)
 
         // Compose
-        implementation(compose.html.core)
-        implementation(compose.runtime)
+        implementation(libs.compose.html)
+        implementation(libs.compose.runtime)
 
         // Coroutines
-        implementation(KotlinX.coroutines.core)
+        implementation(libs.kotlinx.coroutines.core)
 
         // BigNum
-        implementation("com.ionspin.kotlin:bignum:_")
+        implementation(libs.bignum)
 
         // Receipt
         implementation(project(":receipt"))

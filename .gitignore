@@ -7,3 +7,5 @@ out
 !.idea/copyright
 !.idea/codeStyles
 build.properties
+
+versions.properties

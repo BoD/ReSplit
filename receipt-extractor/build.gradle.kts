@@ -1,6 +1,6 @@
 plugins {
-  kotlin("jvm")
-  kotlin("plugin.serialization")
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -9,10 +9,10 @@ kotlin {
 
 dependencies {
   // Logging
-  implementation("org.jraf:klibnanolog:_")
+  implementation(libs.klibnanolog)
 
   // OpenAI
-  implementation("com.openai:openai-java:_")
+  implementation(libs.openai.java)
 
   // Receipt
   api(project(":receipt"))

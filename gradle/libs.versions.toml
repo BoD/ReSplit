@@ -1,0 +1,39 @@
+[versions]
+kotlin = "2.4.0"
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.11.0"
+ktor = "3.5.0"
+compose = "1.11.1"
+klibnanolog = "1.2.0"
+bignum = "0.3.10"
+slf4j = "2.0.18"
+jackson-annotations = "2.22"
+openai-java = "4.39.1"
+dockerJavaApplication = "10.0.0"
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+dockerJavaApplication = { id = "com.bmuschko.docker-java-application", version.ref = "dockerJavaApplication" }
+
+[libraries]
+klibnanolog = { group = "org.jraf.klibnanolog", name = "klibnanolog", version.ref = "klibnanolog" }
+compose-html = { group = "org.jetbrains.compose.html", name = "html-core", version.ref = "compose" }
+compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "compose" }
+bignum = { group = "com.ionspin.kotlin", name = "bignum", version.ref = "bignum" }
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-annotations" }
+openai-java = { group = "com.openai", name = "openai-java", version.ref = "openai-java" }
+ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
+ktor-server-default-headers = { group = "io.ktor", name = "ktor-server-default-headers", version.ref = "ktor" }
+ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
+ktor-server-call-logging = { group = "io.ktor", name = "ktor-server-call-logging", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }

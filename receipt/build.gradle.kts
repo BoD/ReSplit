@@ -1,6 +1,6 @@
 plugins {
-  kotlin("multiplatform")
-  kotlin("plugin.serialization")
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -17,17 +17,17 @@ kotlin {
     commonMain {
       dependencies {
         // Logging
-        implementation("org.jraf:klibnanolog:_")
+        implementation(libs.klibnanolog)
 
         // Json
-        implementation(KotlinX.serialization.json)
+        implementation(libs.kotlinx.serialization.json)
       }
     }
 
     jvmMain {
       dependencies {
         // Jackson annotations
-        implementation("com.fasterxml.jackson.core:jackson-annotations:_")
+        implementation(libs.jackson.annotations)
       }
     }
   }

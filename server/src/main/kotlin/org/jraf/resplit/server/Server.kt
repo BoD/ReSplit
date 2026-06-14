@@ -154,7 +154,7 @@ class Server(
 
             else -> {}
           }
-          part.dispose()
+          part.release()
         }
         logd("File written to ${file!!}")
         extractReceipt(

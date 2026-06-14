@@ -3,9 +3,9 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile.CopyFileInstruction
 
 plugins {
-  kotlin("jvm")
+  alias(libs.plugins.kotlin.jvm)
   id("application")
-  id("com.bmuschko.docker-java-application")
+  alias(libs.plugins.dockerJavaApplication)
 }
 
 kotlin {
@@ -18,12 +18,12 @@ application {
 
 dependencies {
   // Coroutines
-  implementation(KotlinX.coroutines.core)
+  implementation(libs.kotlinx.coroutines.core)
 
   // Logging
-  implementation("org.slf4j:slf4j-api:_")
-  implementation("org.slf4j:slf4j-simple:_")
-  implementation("org.jraf:klibnanolog:_")
+  implementation(libs.slf4j.api)
+  implementation(libs.slf4j.simple)
+  implementation(libs.klibnanolog)
 
   // Server
   implementation(project(":receipt-extractor"))

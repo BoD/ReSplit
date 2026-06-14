@@ -1,5 +1,5 @@
 plugins {
-  kotlin("jvm")
+  alias(libs.plugins.kotlin.jvm)
 }
 
 kotlin {
@@ -15,19 +15,19 @@ kotlin {
 
 dependencies {
   // Logging
-  implementation("org.jraf:klibnanolog:_")
+  implementation(libs.klibnanolog)
 
   // Ktor
-  implementation(Ktor.server.core)
-  implementation(Ktor.server.netty)
-  implementation(Ktor.server.defaultHeaders)
-  implementation(Ktor.server.contentNegotiation)
-  implementation(Ktor.server.statusPages)
-  implementation(Ktor.server.callLogging)
-  implementation(Ktor.plugins.serialization.kotlinx.json)
+  implementation(libs.ktor.server.core)
+  implementation(libs.ktor.server.netty)
+  implementation(libs.ktor.server.default.headers)
+  implementation(libs.ktor.server.content.negotiation)
+  implementation(libs.ktor.server.status.pages)
+  implementation(libs.ktor.server.call.logging)
+  implementation(libs.ktor.serialization.kotlinx.json)
 
   // Json
-  implementation(KotlinX.serialization.json)
+  implementation(libs.kotlinx.serialization.json)
 
   // Receipt
   api(project(":receipt"))
