@@ -9,7 +9,7 @@ plugins {
 }
 
 kotlin {
-  jvmToolchain(11)
+  jvmToolchain(25)
 }
 
 application {
@@ -21,9 +21,8 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
 
   // Logging
-  implementation(libs.slf4j.api)
-  implementation(libs.slf4j.simple)
   implementation(libs.klibnanolog)
+  implementation(libs.logback)
 
   // Server
   implementation(project(":receipt-extractor"))
@@ -32,8 +31,7 @@ dependencies {
 
 docker {
   javaApplication {
-    // Use OpenJ9 instead of the default one
-    baseImage.set("adoptopenjdk/openjdk11-openj9:x86_64-ubuntu-jre-11.0.26_4_openj9-0.49.0")
+    baseImage.set("eclipse-temurin:25")
     maintainer.set("BoD <BoD@JRAF.org>")
     ports.set(listOf(8042))
     images.add("bodlulu/${rootProject.name.lowercase()}:latest")
@@ -50,6 +48,21 @@ tasks.withType<DockerBuildImage> {
 }
 
 tasks.withType<Dockerfile> {
+  // Install curl
+  runCommand("apt-get update")
+  runCommand("apt-get install -y curl")
+
+  // Download the OpenTelemetry Java agent
+  runCommand("curl -L -O https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar")
+
+  // OpenTelemetry Java agent configuration
+  environmentVariable(
+    mapOf(
+      "JAVA_TOOL_OPTIONS" to "-javaagent:opentelemetry-javaagent.jar",
+      "OTEL_SERVICE_NAME" to rootProject.name.lowercase(),
+    )
+  )
+
   // Move the COPY instructions to the end
   // See https://github.com/bmuschko/gradle-docker-plugin/issues/1093
   instructions.set(

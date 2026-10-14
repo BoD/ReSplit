@@ -29,8 +29,6 @@ import org.jraf.klibnanolog.logd
 import org.jraf.klibnanolog.logi
 import org.jraf.resplit.receipt.ReceiptExtractor
 import org.jraf.resplit.server.Server
-import org.slf4j.simple.SimpleLogger
-
 
 class Main {
   private val receiptExtractor =
@@ -59,11 +57,5 @@ class Main {
 }
 
 fun main() {
-  // This must be done before any logger is initialized
-  System.setProperty(SimpleLogger.LOG_FILE_KEY, "System.out")
-  System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "trace")
-  System.setProperty(SimpleLogger.SHOW_DATE_TIME_KEY, "true")
-  System.setProperty(SimpleLogger.DATE_TIME_FORMAT_KEY, "yyyy-MM-dd HH:mm:ss")
-
   Main().start()
 }

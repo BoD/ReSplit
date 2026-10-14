@@ -27,6 +27,8 @@ package org.jraf.resplit.receipt
 
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.models.ChatModel
+import com.openai.models.Reasoning
+import com.openai.models.ReasoningEffort
 import com.openai.models.responses.ResponseCreateParams
 import com.openai.models.responses.ResponseInputContent
 import com.openai.models.responses.ResponseInputFile
@@ -70,8 +72,10 @@ class ReceiptExtractor(
     )
     val responseCreateParams: StructuredResponseCreateParams<Receipt> = ResponseCreateParams.builder()
       .inputOfResponse(listOf(responseInputItem))
-      .model(ChatModel.GPT_5_4_MINI)
+//      .model(ChatModel.GPT_5_4_MINI)
+      .model(ChatModel.GPT_6_LUNA)
       .text(Receipt::class.java)
+      .reasoning(Reasoning.builder().effort(ReasoningEffort.NONE).build())
       .build()
 
     return runCatching {

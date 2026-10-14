@@ -1,14 +1,14 @@
 [versions]
-kotlin = "2.4.0"
+kotlin = "2.4.21"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
-ktor = "3.5.0"
-compose = "1.11.1"
-klibnanolog = "1.2.0"
+ktor = "3.6.0"
+compose = "1.12.1"
+klibnanolog = "1.3.0"
+logback = "1.6.5"
 bignum = "0.3.10"
-slf4j = "2.0.18"
 jackson-annotations = "2.22"
-openai-java = "4.39.1"
+openai-java = "4.81.0"
 dockerJavaApplication = "10.0.0"
 
 [plugins]
@@ -21,11 +21,10 @@ dockerJavaApplication = { id = "com.bmuschko.docker-java-application", version.r
 
 [libraries]
 klibnanolog = { group = "org.jraf.klibnanolog", name = "klibnanolog", version.ref = "klibnanolog" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
 compose-html = { group = "org.jetbrains.compose.html", name = "html-core", version.ref = "compose" }
 compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "compose" }
 bignum = { group = "com.ionspin.kotlin", name = "bignum", version.ref = "bignum" }
-slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
-slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-annotations" }

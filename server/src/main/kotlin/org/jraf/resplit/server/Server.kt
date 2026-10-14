@@ -46,7 +46,9 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respondRedirect
+import io.ktor.server.response.respondResource
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.util.cio.writeChannel
@@ -58,7 +60,6 @@ import org.jraf.resplit.receipt.Receipt
 import org.jraf.resplit.receipt.toJsonString
 import org.slf4j.event.Level
 import java.io.File
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 private const val ENV_PORT = "PORT"
@@ -135,8 +136,11 @@ class Server(
 
   private fun Application.routing() {
     routing {
-      staticResources("/", "")
+      staticResources("/", null)
       staticFiles("/receipts", receiptsDir)
+
+      // Should not be necessary, workaround for https://youtrack.jetbrains.com/issue/KTOR-9999
+      get("/") { call.respondResource("index.html") }
 
       post("/receipt") {
         var extension: String? = null
@@ -146,7 +150,7 @@ class Server(
           when (part) {
             is PartData.FileItem -> {
               extension = part.contentType?.contentSubtype ?: part.originalFileName!!.substringAfterLast('.', "pdf")
-              val fileName = @OptIn(ExperimentalUuidApi::class) Uuid.random().toString() + ".$extension"
+              val fileName = Uuid.random().toString() + ".$extension"
               file = File(receiptsDir, fileName)
               part.provider().copyAndClose(file.writeChannel())
               return@forEachPart

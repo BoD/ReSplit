@@ -3,7 +3,7 @@ plugins {
 }
 
 kotlin {
-  jvmToolchain(11)
+  jvmToolchain(25)
 
   // Add the results of compiling the frontend project as resources so they can be served by the server.
   sourceSets {
