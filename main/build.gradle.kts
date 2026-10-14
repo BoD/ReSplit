@@ -6,10 +6,7 @@ plugins {
   alias(libs.plugins.kotlin.jvm)
   id("application")
   alias(libs.plugins.dockerJavaApplication)
-}
-
-kotlin {
-  jvmToolchain(25)
+  alias(libs.plugins.tapmoc)
 }
 
 application {
@@ -70,6 +67,12 @@ tasks.withType<Dockerfile> {
       if (instruction.keyword == CopyFileInstruction.KEYWORD) 1 else 0
     }
   )
+}
+
+tapmoc {
+  java(25)
+  kotlin(libs.versions.kotlin.get())
+  checkDependencies()
 }
 
 // `DOCKER_USERNAME=<your docker hub login> DOCKER_PASSWORD=<your docker hub password> ./gradlew dockerPushImage` to build and push the image

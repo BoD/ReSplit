@@ -1,10 +1,7 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.kotlin.serialization)
-}
-
-kotlin {
-  jvmToolchain(25)
+  alias(libs.plugins.tapmoc)
 }
 
 dependencies {
@@ -16,4 +13,10 @@ dependencies {
 
   // Receipt
   api(project(":receipt"))
+}
+
+tapmoc {
+  java(25)
+  kotlin(libs.versions.kotlin.get())
+  checkDependencies()
 }

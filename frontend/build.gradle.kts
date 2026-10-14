@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.compose)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.tapmoc)
 }
 
 kotlin {
@@ -34,4 +35,10 @@ kotlin {
       }
     }
   }
+}
+
+tapmoc {
+  java(25)
+  kotlin(libs.versions.kotlin.get())
+  checkDependencies()
 }

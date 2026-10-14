@@ -1,10 +1,9 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.tapmoc)
 }
 
 kotlin {
-  jvmToolchain(25)
-
   // Add the results of compiling the frontend project as resources so they can be served by the server.
   sourceSets {
     main {
@@ -31,4 +30,10 @@ dependencies {
 
   // Receipt
   api(project(":receipt"))
+}
+
+tapmoc {
+  java(25)
+  kotlin(libs.versions.kotlin.get())
+  checkDependencies()
 }

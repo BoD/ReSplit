@@ -1,10 +1,10 @@
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.tapmoc)
 }
 
 kotlin {
-  jvmToolchain(25)
   jvm()
   js {
     browser()
@@ -32,3 +32,10 @@ kotlin {
     }
   }
 }
+
+tapmoc {
+  java(25)
+  kotlin(libs.versions.kotlin.get())
+  checkDependencies()
+}
+

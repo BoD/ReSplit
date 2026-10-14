@@ -5,6 +5,7 @@ plugins {
   alias(libs.plugins.kotlin.compose).apply(false)
   alias(libs.plugins.compose).apply(false)
   alias(libs.plugins.dockerJavaApplication).apply(false)
+  alias(libs.plugins.tapmoc).apply(false)
 }
 
 group = "org.jraf.resplit"
